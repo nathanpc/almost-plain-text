@@ -78,17 +78,15 @@ sub bold_text {
 		# Substitute asterisks by <b> tags.
 		if ($l =~ m/\*/) {
 			if (!$bolding) {
-				$l =~ s/\*/<b>/;
+				$l =~ s/\*/<b>&ast;/;
 				$bolding = 1;
 			} else {
-				$l =~ s/\*/<\/b>/;
+				$l =~ s/\*/&ast;<\/b>/;
 				$bolding = 0;
 			}
-
-			return $l;
 		}
 
-		return 0;
+		return $l;
 	};
 
 	# Go through lines trying to make them bold.
@@ -97,15 +95,8 @@ sub bold_text {
 		next if is_indented($html[$i]);
 
 		# Try to render bold text.
-		my $bold = $render->($html[$i]);
-		if ($bold) {
-			$html[$i] = $bold;
-
-			# Do a second pass to ensure bold doesn't end on the same line.
-			$bold = $render->($bold);
-			if ($bold) {
-				$html[$i] = $bold;
-			}
+		while ($html[$i] =~ m/\*/) {
+			$html[$i] = $render->($html[$i]);
 		}
 	}
 }
