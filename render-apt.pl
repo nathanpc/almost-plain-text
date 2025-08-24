@@ -101,6 +101,26 @@ sub bold_text {
 	}
 }
 
+# Make header lines.
+sub make_headers {
+	# Search for header lines.
+	for (my $i = 0; $i <= $#html; $i++) {
+		# Is this a line with only - or = characters? Same length and previous?
+		if (($html[$i] =~ m/^([-=])[-=]+$/) &&
+				(length($html[$i]) == length($html[$i - 1]))) {
+			if ($1 eq '=') {
+				# Header 1
+				$html[$i - 1] = '<h1>' . $html[$i - 1];
+				$html[$i] = $html[$i] . '</h1>';
+			} else {
+				# Header 2
+				$html[$i - 1] = '<h2>' . $html[$i - 1];
+				$html[$i] = $html[$i] . '</h2>';
+			}
+		}
+	}
+}
+
 # Adds code blocks to indented text (4 spaces).
 sub code_blocks {
 	my $coding = 0;
@@ -182,6 +202,7 @@ read_file($ARGV[0]);
 parse_refdefs();
 encode_entities();
 autolink();
+make_headers();
 bold_text();
 code_blocks();
 ref_links();
