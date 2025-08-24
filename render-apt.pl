@@ -54,6 +54,15 @@ sub parse_refdefs {
 	}
 }
 
+# Encode all HTML entities in the file.
+sub encode_entities {
+	for (my $i = 0; $i <= $#html; $i++) {
+		$html[$i] =~ s/&/&amp;/g if is_indented($html[$i]);
+		$html[$i] =~ s/</&lt;/g;
+		$html[$i] =~ s/>/&gt;/g;
+	}
+}
+
 # Make text inside asterisks bold.
 sub bold_text {
 	my $bolding = 0;
@@ -159,6 +168,7 @@ sub ref_links {
 # Perform all the operations in the correct order.
 read_file($ARGV[0]);
 parse_refdefs();
+encode_entities();
 autolink();
 bold_text();
 code_blocks();
