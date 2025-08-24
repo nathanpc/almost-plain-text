@@ -1,0 +1,6 @@
+# Test files.
+*.apt
+
+# Misc.
+.DS_Store
+Thumbs.db
