@@ -12,17 +12,7 @@ use Data::Dumper;
 
 # Global variables.
 our @html = ();
-
-# Read the file.
-sub read_file {
-	my ($fname) = @_;
-
-	# Slurp the file into the contents array.
-	open(my $fh, '<:encoding(UTF-8)', $fname);
-	@html = <$fh>;
-	chomp @html;
-	close($fh);
-}
+our %refs = ();
 
 # Checks if a line contains code.
 sub is_code {
@@ -36,7 +26,32 @@ sub is_quote {
 
 # Checks if a line contains code or a quote.
 sub is_indented {
-	return $_[0] =~ m/^>|\s{4}/;
+	return $_[0] =~ m/^(?:>|\s{4})/;
+}
+
+# Checks if a line contains a reference link.
+sub has_reflink {
+	return $_[0] =~ m/^(?!\[\d+\]:).+\[(\d+)\]/;
+}
+
+# Read the file.
+sub read_file {
+	my ($fname) = @_;
+
+	# Slurp the file into the contents array.
+	open(my $fh, '<:encoding(UTF-8)', $fname);
+	@html = <$fh>;
+	chomp @html;
+	close($fh);
+}
+
+# Parse all reference link definitions.
+sub parse_refdefs {
+	foreach my $line (@html) {
+		if ($line =~ m/^\s*\[(?<id>\d+)\]:\s+(?<href>.+)/) {
+			$refs{$+{id}} = $+{href};
+		}
+	}
 }
 
 # Make text inside asterisks bold.
@@ -108,10 +123,46 @@ sub code_blocks {
 	}
 }
 
+# Automatically adds links to bare URLs.
+sub autolink {
+	# Substitution helper.
+	my $href_replace = sub { '<a href="' . $_[0] . '">' . $_[0] . '</a>' };
+
+	# Search for bare URLs to link to.
+	for (my $i = 0; $i <= $#html; $i++) {
+		# Ignore code or quote blocks.
+		next if is_indented($html[$i]);
+
+		# Link up all bare URLs.
+		$html[$i] =~ s/([\w\d]+:\/\/[^\/].+[^\s])/$href_replace->($1)/ge;
+	}
+}
+
+# Adds links to references in the middle of the text.
+sub ref_links {
+	# Substitution helper.
+	my $href_replace = sub { '<sup>[<a href="' . $refs{$_[0]} . '">' . $_[0] .
+		'</a>]</sup>' };
+
+	# Search for reference links.
+	for (my $i = 0; $i <= $#html; $i++) {
+		# Ignore code or quote blocks.
+		next if is_indented($html[$i]);
+
+		# Substitute all references in a line.
+		while (has_reflink($html[$i])) {
+			$html[$i] =~ s/\[(\d+)\]/$href_replace->($1)/e;
+		}
+	}
+}
+
 # Perform all the operations in the correct order.
 read_file($ARGV[0]);
+parse_refdefs();
+autolink();
 bold_text();
 code_blocks();
+ref_links();
 
 print "<pre>\n";
 foreach my $line (@html) {
