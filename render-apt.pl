@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 ## render-apt.pl
-## Renders Almost Plain Text (APT) files into multiple formats.
+## Renders Almost Plain Text (APT) files into HTML.
 ##
 ## Author: Nathan Campos <nathan@innoveworkshop.com>
 
@@ -10,24 +10,20 @@ use warnings;
 use autodie;
 use Data::Dumper;
 
-# Contents in multiple formats.
-our @orig = ();
+# Global variables.
 our @html = ();
-our @plain = ();
 
 # Read the file.
 sub read_file {
 	my ($fname) = @_;
 
-	# Slurp the file into the original array.
+	# Slurp the file into the contents array.
 	open(my $fh, '<:encoding(UTF-8)', $fname);
-	@orig = <$fh>;
-	chomp @orig;
+	@html = <$fh>;
+	chomp @html;
 	close($fh);
+}
 
-	# Copy the contents of the file into the HTML and plain text arrays.
-	@html = @orig;
-	@plain = @orig;
 }
 
 # Make text inside asterisks bold.
