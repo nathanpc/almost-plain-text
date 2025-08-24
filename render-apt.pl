@@ -13,6 +13,7 @@ use Data::Dumper;
 # Global variables.
 our @html = ();
 our %refs = ();
+our @img_exts = qw(jpg jpeg png bmp svg gif tif tiff webp heic);
 
 # Checks if a line contains code.
 sub is_code {
@@ -27,6 +28,11 @@ sub is_quote {
 # Checks if a line contains code or a quote.
 sub is_indented {
 	return $_[0] =~ m/^(?:>|\s{4})/;
+}
+
+# Checks if a line is a reference link definition.
+sub is_refdef {
+	return $_[0] =~ m/^\s*\[\d+\]:\s+/;
 }
 
 # Checks if a line contains a reference link.
@@ -134,16 +140,31 @@ sub code_blocks {
 
 # Automatically adds links to bare URLs.
 sub autolink {
+	my $url_regex = qr/([\w\d]+:\/\/[^\/].+[^\s])/;
+
 	# Substitution helper.
 	my $href_replace = sub { '<a href="' . $_[0] . '">' . $_[0] . '</a>' };
+	my $img_replace = sub { '<a href="' . $_[0] . '"><img src="' . $_[0] .
+		'"></a>' };
 
 	# Search for bare URLs to link to.
 	for (my $i = 0; $i <= $#html; $i++) {
 		# Ignore code or quote blocks.
 		next if is_indented($html[$i]);
 
+		# Embed images when possible.
+		if (!is_refdef($html[$i])) {
+			foreach my $ext (@img_exts) {
+				if ($html[$i] =~ m/\.\Q$ext\E$/) {
+					$html[$i] =~ s/$url_regex/$img_replace->($1)/ge;
+					goto next_iter;
+				}
+			}
+		}
+
 		# Link up all bare URLs.
-		$html[$i] =~ s/([\w\d]+:\/\/[^\/].+[^\s])/$href_replace->($1)/ge;
+		$html[$i] =~ s/$url_regex/$href_replace->($1)/ge;
+next_iter:
 	}
 }
 
