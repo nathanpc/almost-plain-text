@@ -164,8 +164,7 @@ bold_text();
 code_blocks();
 ref_links();
 
-print "<pre>\n";
-foreach my $line (@html) {
-	print "$line\n";
-}
+# Print out the HTML document.
+print "<pre>";
+print "$_\n" for @html;
 print "</pre>\n";
