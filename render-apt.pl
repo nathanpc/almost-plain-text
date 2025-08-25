@@ -94,6 +94,9 @@ sub bold_text {
 		# Ignore code or quote blocks.
 		next if is_indented($html[$i]);
 
+		# Double asterisk should be rendered as a simple asterisk.
+		$html[$i] =~ s/\*\*/&ast;/g;
+
 		# Try to render bold text.
 		while ($html[$i] =~ m/\*/) {
 			$html[$i] = $render->($html[$i]);
