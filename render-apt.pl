@@ -10,6 +10,8 @@ use warnings;
 use autodie;
 use Data::Dumper;
 
+package Render::APT;
+
 # Global variables.
 our @html = ();
 our %refs = ();
@@ -200,17 +202,30 @@ sub ref_links {
 	}
 }
 
-# Perform all the operations in the correct order.
-read_file($ARGV[0]);
-parse_refdefs();
-encode_entities();
-autolink();
-make_headers();
-bold_text();
-code_blocks();
-ref_links();
+# Renders a file to our internal contents array.
+sub render_file {
+	my ($fname) = @_;
 
-# Print out the HTML document.
-print "<pre>";
-print "$_\n" for @html;
-print "</pre>\n";
+	# Perform all the operations in the correct order.
+	read_file($fname);
+	parse_refdefs();
+	encode_entities();
+	autolink();
+	make_headers();
+	bold_text();
+	code_blocks();
+	ref_links();
+
+	return @html;
+}
+
+# Running as a script.
+unless (caller) {
+	# Render the file.
+	render_file($ARGV[0]);
+
+	# Print out the HTML document.
+	print "<pre>";
+	print "$_\n" for @html;
+	print "</pre>\n";
+}
